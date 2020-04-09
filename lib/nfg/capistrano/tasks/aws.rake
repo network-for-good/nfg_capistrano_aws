@@ -84,7 +84,7 @@ namespace :aws do
         ask("(answer `YES` to deploy):", 'NO')
       end
 
-      unless (fetch(:confirm_running_instances)&.strip == 'YES')
+      unless %w(YES yes y).include?(fetch(:confirm_running_instances)&.strip)
         abort
       end
     end
