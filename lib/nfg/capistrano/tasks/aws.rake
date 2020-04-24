@@ -134,8 +134,9 @@ namespace :aws do
       puts "--------------------------------------------------------------------------------"
       instances.each do |i|
         role_tag = i.tags.detect { |t| t.key == 'Role' }
+        name_tag = i.tags.detect { |t| t.key == 'Name' }
         puts "#{i.image_id}\t#{i.instance_type}\t#{i.state.name}\t#{i.private_ip_address}\t\t#{role_tag.value}"
-        instance = OpenStruct.new(ip: i.private_ip_address, aws_role: role_tag.value)
+        instance = OpenStruct.new(ip: i.private_ip_address, aws_role: role_tag.value, name: name_tag.value)
         set(:all_instances, fetch(:all_instances, [])).push(instance)
       end
       puts "\nDOWNLOAD_API_KEYS: #{ENV.fetch('DOWNLOAD_API_KEYS', 'n')}"
