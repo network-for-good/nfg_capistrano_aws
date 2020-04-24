@@ -61,7 +61,7 @@ namespace :aws do
       end
 
       worker_instances.each_with_index do |instance, idx|
-        if idx == 0
+        if instance.name =~ /.*worker.*1$/
           server instance.ip, user: fetch(:app_user), roles: %w{resque_worker resque_scheduler cron_instance}
         else
           server instance.ip, user: fetch(:app_user), roles: %w{resque_worker resque_scheduler}
