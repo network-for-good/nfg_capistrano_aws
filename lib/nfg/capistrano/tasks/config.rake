@@ -51,7 +51,6 @@ namespace :config do
 
     if ENV['PACKER'] == 'y' || fetch(:stage) == :development
       before 'rvm:hook', 'aws:deploy:set_app_instances_to_local'
-      after 'aws:deploy:set_app_instances_to_local', 'aws:deploy:print_servers'
 
     elsif fetch(:app_instances) or fetch(:worker_instances)
       print "-> Cron jobs will NOT be installed during manual deployments.\n->\n"
