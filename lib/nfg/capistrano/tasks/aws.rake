@@ -1,6 +1,7 @@
 require 'aws-sdk-ec2'
 require 'active_support/core_ext/hash'
 require 'active_support/hash_with_indifferent_access'
+require 'nfg/capistrano/config/settings'
 
 namespace :aws do
   namespace :maintenance do
