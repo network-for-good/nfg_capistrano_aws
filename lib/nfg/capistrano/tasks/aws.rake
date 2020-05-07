@@ -114,8 +114,9 @@ namespace :aws do
       )
 
       instances = ec2.instances({filters: [
-        {name: 'instance-state-name', values: ['running']},
-        {name: 'tag:Role', values: ['app', 'app_primary', 'worker']}
+        { name: 'instance-state-name', values: ['running'] },
+        { name: 'tag:Environment', values: [fetch(:rails_env)] },
+        { name: 'tag:Role', values: ['app', 'app_primary', 'worker'] }
       ]})
 
       # Debug
