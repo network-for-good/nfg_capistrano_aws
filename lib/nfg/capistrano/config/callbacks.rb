@@ -26,10 +26,8 @@ elsif fetch(:dynamic_server_list)
   after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
   after 'aws:deploy:set_app_instances_to_live', 'aws:deploy:print_servers'
 else
-  set :linked_files, fetch(:linked_files, []).push('/data/config/database.yml', '/data/config/redis.yml', '/data/config/redis-jobs.yml')
-  after 'deploy:linked_files', 'config:check:check_apikeys_download_from_s3'
+  before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
   before 'deploy:migrate', 'migrations:check'
-  before :finishing, 'linked_files:upload_files'
 end
 
 if defined?(CapistranoResque)
