@@ -16,7 +16,10 @@ elsif fetch(:app_instances) or fetch(:worker_instances)
       server instance, user: fetch(:app_user), roles: %w(resque_worker resque_scheduler)
     end
   end
-elsif fetch(:dynamic_server_list)
+elsif fetch(:skip_dynamic_server_list)
+  before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
+  before 'deploy:migrate', 'migrations:check'
+else
   before 'deploy:check:linked_files', 'config:check:upload_setup_files'
   before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
   after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
@@ -25,9 +28,6 @@ elsif fetch(:dynamic_server_list)
   after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
   after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
   after 'aws:deploy:set_app_instances_to_live', 'aws:deploy:print_servers'
-else
-  before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
-  before 'deploy:migrate', 'migrations:check'
 end
 
 if defined?(CapistranoResque)
