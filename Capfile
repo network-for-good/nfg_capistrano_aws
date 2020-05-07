@@ -8,21 +8,16 @@ require "capistrano/deploy"
 require "capistrano/scm/git"
 install_plugin Capistrano::SCM::Git
 
-begin
-  require 'capistrano/rvm'
-  require 'capistrano/bundler'
-  require 'capistrano/linked_files'
-  require 'capistrano/rails'
-  require 'capistrano/npm'
-  require 'capistrano-resque'
-  require 'capistrano/passenger'
-  require 'capistrano/measure'
-  require 'nfg/capistrano/aws'
-  require 'whenever/capistrano'
-rescue LoadError => e
-  print "-> skipping #{e.message.split.last}\n"
-end
-
+require 'capistrano/rvm'
+require 'capistrano/bundler'
+require 'capistrano/linked_files'
+require 'capistrano/rails'
+require 'capistrano/npm'
+require 'capistrano-resque'
+require 'capistrano/passenger'
+require 'capistrano/measure'
+require 'nfg/capistrano/aws'
+require 'whenever/capistrano'
 
 # Load custom tasks from `lib/capistrano/tasks` if you have any defined
 Dir.glob("lib/capistrano/tasks/*.rake").each { |r| import r }
