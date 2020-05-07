@@ -1,6 +1,6 @@
 # Default branch is current branch of local
 set :branch, (ENV.fetch('BRANCH') do |branch|
-  ask("latest tag: #{`git describe --abbrev=0 --tags`.chomp}. Default:", `git rev-parse --abbrev-ref HEAD`.chomp)
+  ask("latest tag: #{`git describe --abbrev=0 --tags`.chomp}.\nDefault:", `git rev-parse --abbrev-ref HEAD`.chomp)
 end)
 
 set :app_instances, ENV['APP_INSTANCES'].split rescue []

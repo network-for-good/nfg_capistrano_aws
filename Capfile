@@ -11,6 +11,7 @@ install_plugin Capistrano::SCM::Git
 begin
   require 'capistrano/rvm'
   require 'capistrano/bundler'
+  require 'capistrano/linked_files'
   require 'capistrano/rails'
   require 'capistrano/npm'
   require 'capistrano-resque'
