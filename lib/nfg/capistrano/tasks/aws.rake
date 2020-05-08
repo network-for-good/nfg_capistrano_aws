@@ -111,8 +111,7 @@ namespace :aws do
 
 			configured_servers = fetch(:upload_servers)
 
-			if configured_servers.any?
-				set :skip_dynamic_server_list, 'true'
+			if configured_servers
 				before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
 				before 'deploy:migrate', 'migrations:check'
 			else
