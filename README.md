@@ -30,10 +30,7 @@ And then execute:
 
     $ bundle
 
-Add the following line to your application's Capfile:
-```ruby
-require 'nfg/capistrano/aws'
-```
+Copy Capfile and config/deploy.rb into your application. Modify deploy.rb with the appropriate values for each setting.
 
 ## Usage
 

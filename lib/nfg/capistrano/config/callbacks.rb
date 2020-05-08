@@ -4,7 +4,6 @@ else
 	before 'rvm:hook', 'aws:deploy:fetch_running_instances'
 end
 
-
 if defined?(CapistranoResque)
   after "deploy:restart", "resque:restart"
   after "resque:restart", "resque:scheduler:restart"
