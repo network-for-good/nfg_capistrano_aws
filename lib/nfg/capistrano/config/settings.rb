@@ -3,9 +3,6 @@ set :branch, (ENV.fetch('BRANCH') do |branch|
   ask("latest tag: #{`git describe --abbrev=0 --tags`.chomp}.\nDefault:", `git rev-parse --abbrev-ref HEAD`.chomp)
 end)
 
-set :app_instances, ENV['APP_INSTANCES'].split rescue []
-set :worker_instances, ENV['WORKER_INSTANCES'].split rescue []
-
 # Default value for :setup_files is []
 # This setup files expected to be present from where we run cap deploy
 set :setup_files, fetch(:setup_files, []).push('/data/config/database.yml', '/data/config/redis.yml', '/data/config/redis-jobs.yml')

@@ -91,27 +91,27 @@ namespace :aws do
 
     desc 'Query Amazon EC2 for Instances tagged with Role: app/app_primary and Running'
     task :fetch_running_instances do
-			if fetch(:app_instances) or fetch(:worker_instances)
+			worker_instances = (ENV['WORKER_INSTANCES'] || '').split
+			app_instances = (ENV['APP_INSTANCES'] || '').split
+			configured_servers = fetch(:upload_servers)
+
+			if app_instances or worker_instances
 				print "-> Cron jobs will NOT be installed during manual deployments.\n->\n"
 
-				if fetch(:app_instances)
-					fetch(:app_instances).each do |instance|
+				if app_instances
+					app_instances.each do |instance|
 						print "-> Deploying to app instance #{instance}\n"
 						server instance, user: fetch(:app_user), roles: %w(web app)
 					end
 				end
 
-				if fetch(:worker_instances)
-					fetch(:worker_instances).each do |instance|
+				if worker_instances
+					worker_instances.each do |instance|
 						print "-> Deploying to worker instance #{instance}\n"
 						server instance, user: fetch(:app_user), roles: %w(resque_worker resque_scheduler)
 					end
 				end
-			end
-
-			configured_servers = fetch(:upload_servers)
-
-			if configured_servers
+			elsif configured_servers
 				before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
 				before 'deploy:migrate', 'migrations:check'
 			else
