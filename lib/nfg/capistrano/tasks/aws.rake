@@ -91,56 +91,87 @@ namespace :aws do
 
     desc 'Query Amazon EC2 for Instances tagged with Role: app/app_primary and Running'
     task :fetch_running_instances do
-      stage = fetch(:stage)
+      worker_instances = (ENV['WORKER_INSTANCES'] || '').split
+      app_instances = (ENV['APP_INSTANCES'] || '').split
+      configured_servers = fetch(:upload_servers)
 
-      # Read Keys here.  Capistrano doesn't have access to Rails.
-      config_hash = ActiveSupport::HashWithIndifferentAccess.new(
-        YAML::load(ERB.new(IO.read(File.join('config', 'api-keys.yml'))).result)
-      )
+      if app_instances.any? or worker_instances.any?
+        print "-> Cron jobs will NOT be installed during manual deployments.\n->\n"
 
-      config =
-        if !config_hash[stage].nil?
-          config_hash[:defaults].deep_merge(config_hash[stage])
-        else
-          config_hash[:defaults]
+        if app_instances
+          app_instances.each do |instance|
+            print "-> Deploying to app instance #{instance}\n"
+            server instance, user: fetch(:app_user), roles: %w(web app)
+          end
         end
 
+        if worker_instances
+          worker_instances.each do |instance|
+            print "-> Deploying to worker instance #{instance}\n"
+            server instance, user: fetch(:app_user), roles: %w(resque_worker resque_scheduler)
+          end
+        end
+      elsif configured_servers
+        before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
+        before 'deploy:migrate', 'migrations:check'
+      else
+        stage = fetch(:stage)
 
-      # Get instances
-      ec2 = Aws::EC2::Resource.new(
-        region: ENV.fetch('AWS_REGION', 'us-east-1'),
-        access_key_id: config.dig('ec2', 'aws_access_key_id'),
-        secret_access_key: config.dig('ec2', 'aws_secret_access_key')
-      )
+        # Read Keys here.  Capistrano doesn't have access to Rails.
+        config_hash = ActiveSupport::HashWithIndifferentAccess.new(
+          YAML::load(ERB.new(IO.read(File.join('config', 'api-keys.yml'))).result)
+        )
 
-      instances = ec2.instances({filters: [
-        {name: 'instance-state-name', values: ['running']},
-        {name: 'tag:Role', values: ['app', 'app_primary', 'worker']}
-      ]})
+        config =
+          if !config_hash[stage].nil?
+            config_hash[:defaults].deep_merge(config_hash[stage])
+          else
+            config_hash[:defaults]
+          end
 
-      # Debug
-      puts "-> To run migrations, add MIGRATE=y to the cap command."
-      puts "-> To download and install api-keys.yml, add DOWNLOAD_API_KEYS=y to the cap command."
-      puts "-> Example usage:"
-      puts "->  bundle exec cap #{rails_env} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
-      puts
-      puts ColorizedString["Running Instance in Region: #{ColorizedString[ec2.client.config.region].red}"].bold
-      if instances.count == 0
-        puts ColorizedString["** NO RUNNING INSTANCES with Role: app/app_primary FOUND.  Aborting **"].red.bold
-        abort
+
+        # Get instances
+        ec2 = Aws::EC2::Resource.new(
+          region: ENV.fetch('AWS_REGION', 'us-east-1'),
+          access_key_id: config.dig('ec2', 'aws_access_key_id'),
+          secret_access_key: config.dig('ec2', 'aws_secret_access_key')
+        )
+
+        instances = ec2.instances({filters: [
+          { name: 'instance-state-name', values: ['running'] },
+          { name: 'tag:Environment', values: [fetch(:rails_env)] },
+          { name: 'tag:Role', values: ['app', 'app_primary', 'worker'] }
+        ]})
+
+        # Debug
+        puts "-> To run migrations, add MIGRATE=y to the cap command."
+        puts "-> To download and install api-keys.yml, add DOWNLOAD_API_KEYS=y to the cap command."
+        puts "-> Example usage:"
+        puts "->  bundle exec cap #{rails_env} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
+        puts
+        puts ColorizedString["Running Instance in Region: #{ColorizedString[ec2.client.config.region].red}"].bold
+        if instances.count == 0
+          puts ColorizedString["** NO RUNNING INSTANCES with Role: app/app_primary FOUND.  Aborting **"].red.bold
+          abort
+        end
+
+        puts "image_id\t\tinstance_type\tstate\tprivate_ip_address\trole"
+        puts "--------------------------------------------------------------------------------"
+        instances.each do |i|
+          role_tag = i.tags.detect { |t| t.key == 'Role' }
+          name_tag = i.tags.detect { |t| t.key == 'Name' }
+          puts "#{i.image_id}\t#{i.instance_type}\t#{i.state.name}\t#{i.private_ip_address}\t\t#{role_tag.value}"
+          instance = OpenStruct.new(ip: i.private_ip_address, aws_role: role_tag.value, name: name_tag.value)
+          set(:all_instances, fetch(:all_instances, [])).push(instance)
+        end
+        puts "\nDOWNLOAD_API_KEYS: #{ENV.fetch('DOWNLOAD_API_KEYS', 'n')}"
+        puts "MIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
+
+        before 'deploy:migrate', 'migrations:check'
+        after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
+        after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
+        after 'aws:deploy:set_app_instances_to_live', 'aws:deploy:print_servers'
       end
-
-      puts "image_id\t\tinstance_type\tstate\tprivate_ip_address\trole"
-      puts "--------------------------------------------------------------------------------"
-      instances.each do |i|
-        role_tag = i.tags.detect { |t| t.key == 'Role' }
-        name_tag = i.tags.detect { |t| t.key == 'Name' }
-        puts "#{i.image_id}\t#{i.instance_type}\t#{i.state.name}\t#{i.private_ip_address}\t\t#{role_tag.value}"
-        instance = OpenStruct.new(ip: i.private_ip_address, aws_role: role_tag.value, name: name_tag.value)
-        set(:all_instances, fetch(:all_instances, [])).push(instance)
-      end
-      puts "\nDOWNLOAD_API_KEYS: #{ENV.fetch('DOWNLOAD_API_KEYS', 'n')}"
-      puts "MIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
     end
   end
 end
