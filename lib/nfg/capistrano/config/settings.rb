@@ -27,7 +27,8 @@ set :keep_releases, 5
 
 # capistrano-whenever
 set :whenever_roles, -> { [:app, :web, :cron_instance] }
-set :whenever_environment, ->{ "#{fetch(:stage)}" }
+set :whenever_environment, defer { stage }
+#set :whenever_environment, ->{ "#{fetch(:stage)}" }
 
 # capistrano-measure
 set :alert_threshold, 10              # default 60 sec
