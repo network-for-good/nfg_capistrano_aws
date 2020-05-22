@@ -25,12 +25,6 @@ set :keep_releases, 5
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 
-# capistrano-whenever
-set :whenever_roles, -> { [:app, :web, :cron_instance] }
-set :whenever_environment, Proc.new { fetch :stage }
-#set :whenever_environment, defer { stage }
-#set :whenever_environment, ->{ "#{fetch(:stage)}" }
-
 # capistrano-measure
 set :alert_threshold, 10              # default 60 sec
 set :warning_threshold, 5             # default 30 sec
