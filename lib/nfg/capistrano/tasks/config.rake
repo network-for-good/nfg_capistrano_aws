@@ -46,8 +46,5 @@ namespace :config do
       end
     end
 
-    before 'deploy:check:linked_files', 'config:check:upload_setup_files'
-    before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
-    after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
   end
 end

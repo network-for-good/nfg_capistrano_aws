@@ -84,7 +84,7 @@ namespace :aws do
         ask("(answer `YES` to deploy):", 'NO')
       end
 
-      unless %w(YES yes y).include?(fetch(:confirm_running_instances)&.strip)
+      unless %w(YES yes y).include?(fetch(:confirm_running_instances).try(:strip))
         abort
       end
     end
@@ -133,8 +133,8 @@ namespace :aws do
         # Get instances
         ec2 = Aws::EC2::Resource.new(
           region: ENV.fetch('AWS_REGION', 'us-east-1'),
-          access_key_id: config.dig('ec2', 'aws_access_key_id'),
-          secret_access_key: config.dig('ec2', 'aws_secret_access_key')
+          access_key_id: config[:ec2][:aws_access_key_id],
+          secret_access_key: config[:ec2][:aws_secret_access_key]
         )
 
         instances = ec2.instances({filters: [
@@ -147,7 +147,7 @@ namespace :aws do
         puts "-> To run migrations, add MIGRATE=y to the cap command."
         puts "-> To download and install api-keys.yml, add DOWNLOAD_API_KEYS=y to the cap command."
         puts "-> Example usage:"
-        puts "->  bundle exec cap #{rails_env} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
+        puts "->  bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
         puts
         puts ColorizedString["Running Instance in Region: #{ColorizedString[ec2.client.config.region].red}"].bold
         if instances.count == 0
@@ -171,6 +171,9 @@ namespace :aws do
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
         after 'aws:deploy:set_app_instances_to_live', 'aws:deploy:print_servers'
+        before 'deploy:check:linked_files', 'config:check:upload_setup_files'
+        before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
+        after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
       end
     end
   end
