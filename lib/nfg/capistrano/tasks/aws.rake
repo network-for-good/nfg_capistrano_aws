@@ -45,6 +45,9 @@ namespace :aws do
     desc "Set the App Instance to localhost"
     task :set_app_instances_to_local do
       server 'localhost', user: fetch(:app_user), roles: %w{web app app_primary}, :primary => true
+      before 'deploy:check:linked_files', 'config:check:upload_setup_files'
+      before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
+      after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
     end
 
     desc 'Use fetch_running_instances to set the App Instances'
@@ -115,9 +118,6 @@ namespace :aws do
         before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
         before 'deploy:migrate', 'migrations:check'
         if configured_servers.first.hostname == 'localhost'
-          before 'deploy:check:linked_files', 'config:check:upload_setup_files'
-          before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
-          after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
         end
       else
         stage = fetch(:stage)
