@@ -32,16 +32,23 @@ And then execute:
 
 Copy Capfile and config/deploy.rb into your application. Modify deploy.rb with the appropriate values for each setting.
 
-## Usage
+## Files
 
-For deployment with capistrano to work, the following files must be present:
+For capistrano deployment to work, the following files must be present in the codebase:
 
+* Capfile
 * config/deploy.rb
 * config/deploy/beta.rb
 * config/deploy/demo.rb
 * config/deploy/production.rb
 * config/deploy/development.rb
-* config/deploy/qa.rb
+
+## Usage
+There are three different ways to configure deployments.
+
+### 1. With a dynamic server list
+### 2. With a manually configured server list
+### 3. With individual instance IPs specified on the command line
 
 ## Development
 
