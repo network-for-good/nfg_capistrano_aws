@@ -49,6 +49,17 @@ There are three different ways to configure deployments.
 ### 1. With a dynamic server list
 ### 2. With a manually configured server list
 ### 3. With individual instance IPs specified on the command line
+When running cap commands manually on the management instance, worker and app instance IPs can be specified using WORKER_INSTANCES and APP_INSTANCES environment variables. Multiple IP addresses should be separated by a space, not a comma.
+
+For example, to start resque and resque_scheduler on two worker instances:
+```
+ WORKER_INSTANCES="10.1.1.2 10.0.0.2" bundle exec cap production resque:start resque:scheduler:start
+```
+
+To deploy to a single app instance:
+```
+ APP_INSTANCES="10.3.3.2" bundle exec cap production deploy
+```
 
 ## Development
 
