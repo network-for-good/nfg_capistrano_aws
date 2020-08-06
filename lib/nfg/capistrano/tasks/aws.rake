@@ -65,9 +65,9 @@ namespace :aws do
 
       worker_instances.each_with_index do |instance, idx|
         if instance.name =~ /.*worker.*1$/
-          server instance.ip, user: fetch(:app_user), roles: %w{worker scheduler cron_instance}
+          server instance.ip, user: fetch(:app_user), roles: %w{worker cron_instance}
         else
-          server instance.ip, user: fetch(:app_user), roles: %w{worker scheduler}
+          server instance.ip, user: fetch(:app_user), roles: %w{worker}
         end
       end
     end
@@ -76,7 +76,7 @@ namespace :aws do
     task :print_servers do
       puts ColorizedString['Servers Defined'].bold
       puts '-----------------------'
-      %i[app app_primary web worker scheduler cron_instance].each do |r|
+      %i[app app_primary web worker cron_instance].each do |r|
         puts ColorizedString["Role: [#{r}]"].bold
         puts roles(r)
       end
@@ -111,7 +111,7 @@ namespace :aws do
         if worker_instances
           worker_instances.each do |instance|
             print "-> Deploying to worker instance #{instance}\n"
-            server instance, user: fetch(:app_user), roles: %w(worker scheduler)
+            server instance, user: fetch(:app_user), roles: %w(worker)
           end
         end
       elsif configured_servers
