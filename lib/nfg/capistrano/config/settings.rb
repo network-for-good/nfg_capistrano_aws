@@ -13,12 +13,9 @@ set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/
 # Default value for linked_dirs is []
 set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'public/system', 'public/assets')
 
-# If you'd like to capture this output instead, just specify a log file:
-set :resque_log_file, "log/resque.log"
-
 # Restart from current
 set :passenger_restart_with_touch, true
-set :assets_roles, [:app, :resque_worker]
+set :assets_roles, [:app, :worker]
 
 set :keep_releases, 5
 
