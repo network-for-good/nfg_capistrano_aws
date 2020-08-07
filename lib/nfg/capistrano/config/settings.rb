@@ -15,7 +15,7 @@ set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids'
 
 # Restart from current
 set :passenger_restart_with_touch, true
-set :assets_roles, [:app, :worker]
+set :assets_roles, [:app, :worker, :resque_worker]
 
 set :keep_releases, 5
 
