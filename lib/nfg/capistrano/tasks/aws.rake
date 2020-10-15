@@ -114,7 +114,7 @@ namespace :aws do
             server instance, user: fetch(:app_user), roles: %w(resque_worker resque_scheduler worker)
           end
         end
-      elsif configured_servers
+      elsif configured_servers.any?
         before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
         before 'deploy:migrate', 'migrations:check'
         if configured_servers.first.hostname == 'localhost'
