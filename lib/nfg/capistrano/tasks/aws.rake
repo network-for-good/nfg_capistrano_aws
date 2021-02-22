@@ -37,9 +37,11 @@ namespace :aws do
   namespace :deploy do
     desc 'Confirm App Instances and Proceed'
     task :confirm_running_instances do
-      puts "\n\n"
-      puts ColorizedString["You are deploying to ENV: #{ColorizedString[fetch(:stage).to_s].bold} with Branch/Tag: #{ColorizedString[fetch(:branch).to_s].bold}"].red
-      puts "The instance IPs are: #{fetch(:all_instances).map { |i| ["#{i.ip} (#{i.aws_role})"] }.join(', ')}"
+      unless fetch(:all_instances).nil?
+        puts "\n\n"
+        puts ColorizedString["You are deploying to ENV: #{ColorizedString[fetch(:stage).to_s].bold} with Branch/Tag: #{ColorizedString[fetch(:branch).to_s].bold}"].red
+        puts "The instance IPs are: #{fetch(:all_instances).map { |i| ["#{i.ip} (#{i.aws_role})"] }.join(', ')}"
+      end
     end
 
     desc "Set the App Instance to localhost"
@@ -96,7 +98,7 @@ namespace :aws do
     task :fetch_running_instances do
       worker_instances = (ENV['WORKER_INSTANCES'] || '').split
       app_instances = (ENV['APP_INSTANCES'] || '').split
-      configured_servers = fetch(:upload_servers)
+      configured_servers = release_roles(:all)
 
       if app_instances.any? or worker_instances.any?
         print "-> Cron jobs will NOT be installed during manual deployments.\n->\n"
@@ -114,7 +116,7 @@ namespace :aws do
             server instance, user: fetch(:app_user), roles: %w(resque_worker resque_scheduler worker)
           end
         end
-      elsif configured_servers.present?
+      elsif configured_servers.any?
         before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
         before 'deploy:migrate', 'migrations:check'
         if configured_servers.first.hostname == 'localhost'
