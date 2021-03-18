@@ -38,7 +38,7 @@ namespace :aws do
     desc 'Confirm App Instances and Proceed'
     task :confirm_running_instances do
       unless fetch(:all_instances).nil?
-        puts "\n\n"
+        puts "\n"
         puts ColorizedString["You are deploying to ENV: #{ColorizedString[fetch(:stage).to_s].bold} with Branch/Tag: #{ColorizedString[fetch(:branch).to_s].bold}"].red
         puts "The instance IPs are: #{fetch(:all_instances).map { |i| ["#{i.ip} (#{i.aws_role})"] }.join(', ')}"
         sleep 5
@@ -72,26 +72,6 @@ namespace :aws do
         else
           server instance.ip, user: fetch(:app_user), roles: %w{resque_worker resque_scheduler worker}
         end
-      end
-    end
-
-    desc 'Print Server Config'
-    task :print_servers do
-      puts ColorizedString['Servers Defined'].bold
-      puts '-----------------------'
-      %i[app app_primary web resque_worker resque_scheduler worker cron_instance].each do |r|
-        puts ColorizedString["Role: [#{r}]"].bold
-        puts roles(r)
-      end
-      puts "\n"
-
-      puts "Check the list of servers and roles above and confirm."
-      set :confirm_running_instances do
-        ask("(answer `YES` to deploy):", 'NO')
-      end
-
-      unless %w(YES yes y).include?(fetch(:confirm_running_instances).try(:strip))
-        abort
       end
     end
 
