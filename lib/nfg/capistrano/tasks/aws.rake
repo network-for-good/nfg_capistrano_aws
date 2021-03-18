@@ -154,7 +154,7 @@ namespace :aws do
         puts "-> To run migrations, add MIGRATE=y to the cap command."
         puts "-> To download and install api-keys.yml, add DOWNLOAD_API_KEYS=y to the cap command."
         puts "-> Example usage:"
-        puts "->  bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
+        puts "->   bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
         puts
         puts ColorizedString["Running Instance in Region: #{ColorizedString[ec2.client.config.region].red}"].bold
         if instances.count == 0
@@ -175,9 +175,7 @@ namespace :aws do
         puts "MIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
 
         before 'deploy:migrate', 'migrations:check'
-        after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
-        after 'aws:deploy:set_app_instances_to_live', 'aws:deploy:print_servers'
         before 'deploy:check:linked_files', 'config:check:upload_setup_files'
         before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
         after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
