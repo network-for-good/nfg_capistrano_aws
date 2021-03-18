@@ -38,9 +38,10 @@ namespace :aws do
     desc 'Confirm App Instances and Proceed'
     task :confirm_running_instances do
       unless fetch(:all_instances).nil?
-        puts "\n\n"
+        puts "\n"
         puts ColorizedString["You are deploying to ENV: #{ColorizedString[fetch(:stage).to_s].bold} with Branch/Tag: #{ColorizedString[fetch(:branch).to_s].bold}"].red
         puts "The instance IPs are: #{fetch(:all_instances).map { |i| ["#{i.ip} (#{i.aws_role})"] }.join(', ')}"
+        sleep 5
       end
     end
 
@@ -71,26 +72,6 @@ namespace :aws do
         else
           server instance.ip, user: fetch(:app_user), roles: %w{resque_worker resque_scheduler worker}
         end
-      end
-    end
-
-    desc 'Print Server Config'
-    task :print_servers do
-      puts ColorizedString['Servers Defined'].bold
-      puts '-----------------------'
-      %i[app app_primary web resque_worker resque_scheduler worker cron_instance].each do |r|
-        puts ColorizedString["Role: [#{r}]"].bold
-        puts roles(r)
-      end
-      puts "\n"
-
-      puts "Check the list of servers and roles above and confirm."
-      set :confirm_running_instances do
-        ask("(answer `YES` to deploy):", 'NO')
-      end
-
-      unless %w(YES yes y).include?(fetch(:confirm_running_instances).try(:strip))
-        abort
       end
     end
 
@@ -154,7 +135,7 @@ namespace :aws do
         puts "-> To run migrations, add MIGRATE=y to the cap command."
         puts "-> To download and install api-keys.yml, add DOWNLOAD_API_KEYS=y to the cap command."
         puts "-> Example usage:"
-        puts "->  bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
+        puts "->   bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
         puts
         puts ColorizedString["Running Instance in Region: #{ColorizedString[ec2.client.config.region].red}"].bold
         if instances.count == 0
@@ -177,7 +158,6 @@ namespace :aws do
         before 'deploy:migrate', 'migrations:check'
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
-        after 'aws:deploy:set_app_instances_to_live', 'aws:deploy:print_servers'
         before 'deploy:check:linked_files', 'config:check:upload_setup_files'
         before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
         after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
