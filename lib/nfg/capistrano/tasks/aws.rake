@@ -41,6 +41,7 @@ namespace :aws do
         puts "\n\n"
         puts ColorizedString["You are deploying to ENV: #{ColorizedString[fetch(:stage).to_s].bold} with Branch/Tag: #{ColorizedString[fetch(:branch).to_s].bold}"].red
         puts "The instance IPs are: #{fetch(:all_instances).map { |i| ["#{i.ip} (#{i.aws_role})"] }.join(', ')}"
+        sleep 5
       end
     end
 
@@ -175,7 +176,8 @@ namespace :aws do
         puts "MIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
 
         before 'deploy:migrate', 'migrations:check'
-        after 'aws:deploy:fetch_running_instances', 'aws:deploy:set_app_instances_to_live'
+        after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
+        after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
         before 'deploy:check:linked_files', 'config:check:upload_setup_files'
         before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
         after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
