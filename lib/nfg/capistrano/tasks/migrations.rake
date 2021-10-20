@@ -4,7 +4,7 @@ namespace :migrations do
     case ENV['MIGRATE']
     when 'y','yes','YES','true'
       puts '[migrate:check] Run Migrations'
-      before 'deploy:symlink:release', 'deploy:migrate'
+      require 'capistrano/rails/migrations'
     else
       puts '[migrate:check] Skip Migrations'
     end
