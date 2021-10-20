@@ -4,7 +4,7 @@ namespace :migrations do
     case ENV['MIGRATE']
     when 'y','yes','YES','true'
       puts '[migrate:check] Run Migrations'
-      require 'capistrano/rails/migrations'
+      set :migration_role, :app_primary
     else
       puts '[migrate:check] Skip Migrations'
     end
