@@ -155,7 +155,6 @@ namespace :aws do
         puts "\nDOWNLOAD_API_KEYS: #{ENV.fetch('DOWNLOAD_API_KEYS', 'n')}"
         puts "MIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
 
-        before 'deploy:migrate', 'migrations:check'
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
         before 'deploy:check:linked_files', 'config:check:upload_setup_files'
