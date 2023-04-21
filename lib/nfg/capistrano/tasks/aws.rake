@@ -1,7 +1,6 @@
 require 'aws-sdk-ec2'
 require 'active_support/core_ext/hash'
 require 'active_support/hash_with_indifferent_access'
-require 'fileutils'
 
 namespace :aws do
   namespace :maintenance do
@@ -74,12 +73,6 @@ namespace :aws do
           server instance.ip, user: fetch(:app_user), roles: %w{resque_worker resque_scheduler worker}
         end
       end
-    end
-
-    desc "Remove the git cache directory, since running bundle with it present will sometimes cause errors"
-    task :remove_git_cache_dir do
-      git_cache_dir = %x{ bash -lc "rvm gemdir" }.strip + "/cache/bundler/git"
-      FileUtils::Verbose.rm_rf(git_cache_dir)
     end
 
     desc 'Query Amazon EC2 for Instances tagged with Role: app/app_primary and Running'
