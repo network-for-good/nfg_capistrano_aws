@@ -103,26 +103,11 @@ namespace :aws do
         if configured_servers.first.hostname == 'localhost'
         end
       else
-        stage = fetch(:stage)
-
-        # Read Keys here.  Capistrano doesn't have access to Rails.
-        config_hash = ActiveSupport::HashWithIndifferentAccess.new(
-          YAML::load(ERB.new(IO.read(File.join('config', 'api-keys.yml'))).result)
-        )
-
-        config =
-          if !config_hash[stage].nil?
-            config_hash[:defaults].deep_merge(config_hash[stage])
-          else
-            config_hash[:defaults]
-          end
-
-
         # Get instances
         ec2 = Aws::EC2::Resource.new(
           region: ENV.fetch('AWS_REGION', 'us-east-1'),
-          access_key_id: config[:ec2][:aws_access_key_id],
-          secret_access_key: config[:ec2][:aws_secret_access_key]
+          access_key_id: Nfg::Capistrano::Config.api_keys[:ec2][:aws_access_key_id],
+          secret_access_key: Nfg::Capistrano::Config.api_keys[:ec2][:aws_secret_access_key]
         )
 
         instances = ec2.instances({filters: [
