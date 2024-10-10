@@ -10,10 +10,11 @@ namespace :deploy do
       assets_filename="assets/#{assets_cache_prefix}-assets-#{revision}-#{branch}.tar.gz"
       s3_bucket = "nfg-#{fetch(:app_user)}-config"
 
-      if execute :s3cmd, "--force get s3://#{s3_bucket}/#{assets_filename} #{shared_path}/public/#{assets_filename}"
+      begin
+        execute :s3cmd, "--force get s3://#{s3_bucket}/#{assets_filename} #{shared_path}/public/#{assets_filename}"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}")
         execute "tar zxvf #{shared_path}/public/#{assets_filename} -C #{shared_path}"
-      else
+      rescue => e
         warn Airbrussh::Colors.red("Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}")
         invoke 'deploy:assets:precompile'
         invoke 'deploy:assets:backup_manifest'
