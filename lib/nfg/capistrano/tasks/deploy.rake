@@ -20,15 +20,15 @@ namespace :deploy do
     assets_filename="assets/#{assets_cache_prefix}-assets-#{revision}-#{branch}.tar.gz"
     s3_bucket = "nfg-#{fetch(:app_user)}-config"
 
-    puts "Attempting to download #{assets_filename} from #{s3_bucket}"
     begin
       # This will throw a NotFound error if the key doesn't exist
       s3.head_object(bucket: s3_bucket, key: assets_filename)
 
+      Airbrussh::Colors.green("Downloading #{assets_filename} from #{s3_bucket}")
       response = s3.get_object({ bucket: s3_bucket, key: assets_filename }, target: "public/#{assets_filename}")
       %x(tar zxvf public/#{assets_filename})
     rescue Aws::S3::Errors::NotFound => e
-      puts "Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}"
+      Airbrussh::Colors.red("Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}")
       invoke 'deploy:assets:precompile'
       invoke 'deploy:assets:backup_manifest'
     end
