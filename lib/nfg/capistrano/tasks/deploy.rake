@@ -26,8 +26,8 @@ namespace :deploy do
         s3.head_object(bucket: s3_bucket, key: assets_filename)
 
         info Airbrussh::Colors.green("Downloading #{assets_filename} from #{s3_bucket}")
-        response = s3.get_object({ bucket: s3_bucket, key: assets_filename }, target: "public/#{assets_filename}")
-        %x(tar zxvf public/#{assets_filename})
+        response = s3.get_object({ bucket: s3_bucket, key: assets_filename }, target: "#{shared_path}/public/#{assets_filename}")
+        execute "tar zxvf #{release_path}/public/#{assets_filename} -C #{shared_path}"
       rescue Aws::S3::Errors::NotFound => e
         warn Airbrussh::Colors.red("Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}")
         invoke 'deploy:assets:precompile'
