@@ -8,16 +8,23 @@ namespace :deploy do
     branch = fetch(:branch).gsub('/', '_')
     assets_filename="#{assets_cache_prefix}-assets-#{revision}-#{branch}.tar.gz"
     s3_bucket = Nfg::Capistrano::Config.circleci[:parameters][:s3_bucket][:default]
-    s3cmd_ls=%x(s3cmd -c ~dm/.s3cfg ls "#{s3_bucket}/#{assets_filename}")
+    aws_credentials = Aws::Credentials.new(
+      Nfg::Capistrano::Config.api_keys[:aws_access_key_id],
+      Nfg::Capistrano::Config.api_keys[:aws_secret_access_key]
+    )
+    s3 = Aws::S3::Client.new(
+      region: ENV.fetch('AWS_REGION', 'us-east-1'),
+      credentials: aws_credentials
+    )
 
-    case s3cmd_ls
-    when /#{assets_filename}/
+    begin
+      s3.head_object(bucket: s3_bucket, key: assets_filename)
       on release_roles :all do
         execute :s3cmd, "--force get s3://#{s3_bucket}/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}")
         execute "tar zxvf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
       end
-    else
+    rescue
       on release_roles :all do
         warn Airbrussh::Colors.red("Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}")
       end
