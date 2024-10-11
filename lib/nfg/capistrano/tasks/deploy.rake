@@ -1,3 +1,5 @@
+require 'aws-sdk-s3'
+
 namespace :deploy do
   Rake::Task['deploy:compile_assets'].clear
 
@@ -18,13 +20,13 @@ namespace :deploy do
     )
 
     begin
-      s3.head_object(bucket: s3_bucket, key: assets_filename)
+      s3.head_object(bucket: s3_bucket.gsub('s3://', '').split('/').first, key: "assets/#{assets_filename}")
       on release_roles :all do
         execute :s3cmd, "--force get s3://#{s3_bucket}/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}")
         execute "tar zxvf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
       end
-    rescue
+    rescue Aws::S3::Errors::NotFound => e
       on release_roles :all do
         warn Airbrussh::Colors.red("Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}")
       end
