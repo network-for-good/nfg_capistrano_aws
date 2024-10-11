@@ -11,7 +11,7 @@ set :setup_files, fetch(:setup_files, []).push('/data/config/database.yml', '/da
 set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/redis.yml', 'config/redis-jobs.yml', 'config/api-keys.yml')
 
 # Default value for linked_dirs is []
-set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'public/system', 'public/assets')
+set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'public/system', 'public/assets', 'public/packs')
 
 # Restart from current
 set :passenger_restart_with_touch, true
