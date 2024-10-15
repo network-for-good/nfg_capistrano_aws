@@ -14,19 +14,21 @@ namespace :deploy do
       Nfg::Capistrano::Config.api_keys[:aws_access_key_id],
       Nfg::Capistrano::Config.api_keys[:aws_secret_access_key]
     )
-    s3 = Aws::S3::Client.new(
+    s3_assets_file = Aws::S3::Object.new(
       region: ENV.fetch('AWS_REGION', 'us-east-1'),
-      credentials: aws_credentials
+      credentials: aws_credentials,
+      bucket_name: s3_bucket.gsub('s3://', ''),
+      key: "assets/#{assets_filename}"
     )
 
-    begin
+    if s3_assets_file.exists?
       s3.head_object(bucket: s3_bucket.gsub('s3://', ''), key: "assets/#{assets_filename}")
       on release_roles :all do
         execute :s3cmd, "--force get #{s3_bucket}/assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}/assets")
         execute "tar zxvf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
       end
-    rescue Aws::S3::Errors::NotFound => e
+    else
       on release_roles :all do
         warn Airbrussh::Colors.red("Compiling assets manually since #{assets_filename} does not exist in #{s3_bucket}/assets")
       end
