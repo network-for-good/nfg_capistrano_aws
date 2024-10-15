@@ -22,7 +22,6 @@ namespace :deploy do
     )
 
     if s3_assets_file.exists?
-      s3.head_object(bucket: s3_bucket.gsub('s3://', ''), key: "assets/#{assets_filename}")
       on release_roles :all do
         execute :s3cmd, "--force get #{s3_bucket}/assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}/assets")
