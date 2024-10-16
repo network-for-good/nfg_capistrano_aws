@@ -10,18 +10,15 @@ module Nfg
 
       # Read Keys here.  Capistrano doesn't have access to Rails.
       def self.api_keys
-        @api_keys_config ||=
-          stage = fetch(:stage)
-          config_hash = ActiveSupport::HashWithIndifferentAccess.new(
-            YAML::load(ERB.new(IO.read(File.join('config', 'api-keys.yml'))).result)
-          )
+        config_hash = ActiveSupport::HashWithIndifferentAccess.new(
+          YAML::load(ERB.new(IO.read(File.join('config', 'api-keys.yml'))).result)
+        )
 
-
-        if !config_hash[stage].nil?
-          config_hash[:defaults].deep_merge(config_hash[stage])
-        else
-          config_hash[:defaults]
-        end
+        @api_keys_config ||= if !config_hash[fetch(:stage)].nil?
+                               config_hash[:defaults].deep_merge(config_hash[fetch(:stage)])
+                             else
+                               config_hash[:defaults]
+                             end
       end
     end
   end
