@@ -23,7 +23,7 @@ namespace :deploy do
 
     if s3_assets_file.exists?
       on release_roles :all do
-        execute :aws, "s3api get-object --profile s3-role --bucket #{s3_bucket.gsub('s3://', ''} --key assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
+        execute :aws, "s3api get-object --profile s3-role --bucket #{s3_bucket.gsub('s3://', '')} --key assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}/assets")
         execute "tar zxvf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
       end
