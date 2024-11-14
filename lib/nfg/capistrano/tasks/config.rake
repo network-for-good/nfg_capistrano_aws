@@ -40,7 +40,13 @@ namespace :config do
     task :get_api_keys_from_s3 do
       set :api_key_file, 'config/api-keys.yml'
       on roles(:all) do
-        unless execute :aws, "s3api get-object --profile s3-role --bucket #{fetch(:setup_bucket)} --key #{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
+        begin
+          if File.executable?("/usr/bin/s3cmd")
+            execute :s3cmd, "--force get s3://#{fetch(:setup_bucket)}/#{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
+          else
+            execute :aws, "s3api get-object --profile s3-role --bucket #{fetch(:setup_bucket)} --key #{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
+          end
+        rescue
           puts "Error downloading (Maybe there's no api-keys file at s3://#{fetch(:setup_bucket)}/#{fetch(:api_key_file)} )"
         end
       end
