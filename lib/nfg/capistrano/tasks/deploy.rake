@@ -8,7 +8,8 @@ namespace :deploy do
     assets_cache_prefix = Nfg::Capistrano::Config.circleci[:parameters][:assets_cache_prefix][:default]
     revision = %x(git --no-pager log -1 --pretty=format:%H)
     branch = fetch(:branch).gsub('/', '_')
-    assets_filename="#{assets_cache_prefix}-assets-#{revision}-#{branch}.tar.gz"
+    rails_env = fetch(:rails_env)
+    assets_filename="#{assets_cache_prefix}-assets-#{revision}-#{branch}-#{rails_env}.tar.gz"
     s3_bucket = Nfg::Capistrano::Config.circleci[:parameters][:s3_bucket][:default]
     aws_credentials = Aws::Credentials.new(
       Nfg::Capistrano::Config.api_keys[:aws_access_key_id],
