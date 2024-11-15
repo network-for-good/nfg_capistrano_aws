@@ -30,7 +30,7 @@ namespace :deploy do
           execute :aws, "s3api get-object --profile s3-role --bucket #{s3_bucket.gsub('s3://', '')} --key assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         end
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}/assets")
-        execute "tar zxvf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
+        execute "tar zxf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
         info Airbrussh::Colors.green("Extracted #{assets_filename} from #{s3_bucket}/assets")
       end
     else
