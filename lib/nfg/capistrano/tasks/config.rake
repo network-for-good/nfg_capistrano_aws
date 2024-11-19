@@ -41,7 +41,7 @@ namespace :config do
       set :api_key_file, 'config/api-keys.yml'
       on roles(:all) do
         begin
-          if File.executable?("/usr/bin/s3cmd")
+          if test("[ -f /usr/bin/s3cmd ]")
             execute :s3cmd, "--force get s3://#{fetch(:setup_bucket)}/#{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
           else
             execute :aws, "s3api get-object --profile s3-role --bucket #{fetch(:setup_bucket)} --key #{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
