@@ -23,14 +23,16 @@ namespace :deploy do
     )
 
     if s3_assets_file.exists?
+      FileUtils.mkdir_p "#{shared_path}/public/assets"
       on release_roles :all do
         if test("[ -f /usr/bin/s3cmd ]")
           execute :s3cmd, "--force get #{s3_bucket}/assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         else
+          FileUtils.rm_rf Dir.glob("#{dir_path}/*")
           execute :aws, "s3api get-object --profile s3-role --bucket #{s3_bucket.gsub('s3://', '')} --key assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename}"
         end
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}/assets")
-        execute "tar zxf #{shared_path}/public/assets/#{assets_filename} -C #{shared_path}"
+        execute "tar zxf #{shared_path}/public/assets/#{assets_filename} -C #{release_path}"
         info Airbrussh::Colors.green("Extracted #{assets_filename} from #{s3_bucket}/assets")
       end
     else
