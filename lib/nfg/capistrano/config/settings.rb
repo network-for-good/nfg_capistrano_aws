@@ -19,8 +19,6 @@ set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids'
 set :passenger_restart_with_touch, true
 set :assets_roles, [:app, :worker, :resque_worker]
 
-
-
 set :keep_releases, 5
 
 # Uncomment the following to require manually verifying the host key before first deploy.
