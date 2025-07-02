@@ -26,29 +26,41 @@ namespace :config do
       end
     end
 
-    desc 'Check if api-keys should download from S3'
-    task :check_apikeys_download_from_s3 do
-      case ENV['DOWNLOAD_API_KEYS']
-      when 'y','yes','YES','true'
-        invoke 'config:check:get_api_keys_from_s3'
-      else
-        puts '[config:check:check_apikeys_download_from_s3] Skip api-keys.yml file Download from S3'
-      end
-    end
-
-    desc 'get_api_keys_from_s3'
-    task :get_api_keys_from_s3 do
-      set :api_key_file, 'config/api-keys.yml'
+    desc 'Download all configuration files from S3'
+    task :get_config_files_from_s3 do
       on roles(:all) do
-        begin
-          if test("[ -f /usr/bin/s3cmd ]")
-            execute :s3cmd, "--force get s3://#{fetch(:setup_bucket)}/#{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
-          else
-            execute :aws, "s3api get-object --profile s3-role --bucket #{fetch(:setup_bucket)} --key #{fetch(:api_key_file)} #{shared_path}/#{fetch(:api_key_file)}"
+        s3_config = fetch(:s3_config_files)
+        
+        puts "\n--- Downloading Config Files from S3 ---"
+        s3_config.each do |bucket_key, files|
+          bucket_name = fetch(bucket_key)
+          bucket_name = bucket_name.respond_to?(:call) ? bucket_name.call : bucket_name
+          
+          files.each do |file_config|
+            config_file = file_config[:file].respond_to?(:call) ? file_config[:file].call : file_config[:file]
+            required = file_config[:required]
+            s3_url = "s3://#{bucket_name}/#{config_file}"
+            destination = "#{shared_path}/config/#{File.basename(config_file)}"
+            
+            puts "Downloading: #{s3_url} -> #{destination}"
+            
+            begin
+              # Ensure destination directory exists
+              execute :mkdir, '-p', File.dirname(destination)
+              
+              execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{destination}"
+              puts ColorizedString["✓ Successfully downloaded #{config_file}"].green
+            rescue
+              if required
+                puts ColorizedString["ERROR! - Failed to download required file: #{s3_url}"].red
+                exit 1
+              else
+                puts ColorizedString["⚠ #{config_file} not found in S3 (optional file, skipping)"].yellow
+              end
+            end
           end
-        rescue
-          puts "Error downloading (Maybe there's no api-keys file at s3://#{fetch(:setup_bucket)}/#{fetch(:api_key_file)} )"
         end
+        puts "--- S3 Download Complete ---\n"
       end
     end
 
