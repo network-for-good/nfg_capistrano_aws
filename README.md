@@ -10,8 +10,7 @@ cap aws:deploy:set_app_instances_to_local        # Set the App Instance to local
 cap aws:maintenance:off                          # Maintenance mode Off
 cap aws:maintenance:on                           # Maintenance mode on
 
-cap config:check:check_apikeys_download_from_s3  # Check if api-keys should download from S3
-cap config:check:get_api_keys_from_s3            # get_api_keys_from_s3
+cap config:check:get_config_files_from_s3        # Download all configuration files from S3
 cap config:check:setup_files_exists_local        # Check Setup files exists in Local
 cap config:check:upload_setup_files              # Check Setup files are exists, if not upload files
 

@@ -50,7 +50,7 @@ namespace :aws do
       server 'localhost', user: fetch(:app_user), roles: ENV['CAP_ROLES'].split(','), primary: true
       before 'deploy:check:linked_files', 'config:check:upload_setup_files'
       before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
-      after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
+      after 'config:check:upload_setup_files', 'config:check:get_config_files_from_s3'
     end
 
     desc 'Use fetch_running_instances to set the App Instances'
@@ -98,7 +98,7 @@ namespace :aws do
           end
         end
       elsif configured_servers.any?
-        before 'deploy:symlink:linked_files', 'config:check:check_apikeys_download_from_s3'
+        before 'deploy:symlink:linked_files', 'config:check:get_config_files_from_s3'
         before 'deploy:migrate', 'migrations:check'
         if configured_servers.first.hostname == 'localhost'
         end
@@ -118,9 +118,9 @@ namespace :aws do
 
         # Debug
         puts "-> To run migrations, add MIGRATE=y to the cap command."
-        puts "-> To download and install api-keys.yml, add DOWNLOAD_API_KEYS=y to the cap command."
+        puts "-> Config files will be automatically downloaded from S3."
         puts "-> Example usage:"
-        puts "->   bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y DOWNLOAD_API_KEYS=y"
+        puts "->   bundle exec cap #{fetch(:rails_env)} deploy MIGRATE=y"
         puts
         puts ColorizedString["Running Instance in Region: #{ColorizedString[ec2.client.config.region].red}"].bold
         if instances.count == 0
@@ -137,15 +137,39 @@ namespace :aws do
           instance = OpenStruct.new(ip: i.private_ip_address, aws_role: role_tag.value, name: name_tag.value)
           set(:all_instances, fetch(:all_instances, [])).push(instance)
         end
-        puts "\nDOWNLOAD_API_KEYS: #{ENV.fetch('DOWNLOAD_API_KEYS', 'n')}"
-        puts "MIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
+        puts "\nMIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
+
+        # Debug S3 Config Files
+        puts "\n--- S3 Config Files Debug ---"
+        begin
+          puts "Application: #{fetch(:application)}"
+          app_config_path = fetch(:app_config_path)
+          app_config_path = app_config_path.respond_to?(:call) ? app_config_path.call : app_config_path
+          puts "App Config Path: #{app_config_path}"
+          
+          s3_config = fetch(:s3_config_files, {})
+          s3_config.each do |bucket_key, files|
+            bucket_name = fetch(bucket_key)
+            bucket_name = bucket_name.respond_to?(:call) ? bucket_name.call : bucket_name
+            puts "#{bucket_key} (#{bucket_name}):"
+            files.each do |file_config|
+              config_file = file_config[:file].respond_to?(:call) ? file_config[:file].call : file_config[:file]
+              status = file_config[:required] ? "REQUIRED" : "optional"
+              s3_url = "s3://#{bucket_name}/#{config_file}"
+              puts "  - #{s3_url} (#{status})"
+            end
+          end
+        rescue => e
+          puts "Error displaying S3 config: #{e.message}"
+        end
+        puts "--- End S3 Config Debug ---\n"
 
         before 'deploy:migrate', 'migrations:check'
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
         before 'deploy:check:linked_files', 'config:check:upload_setup_files'
         before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
-        after 'config:check:upload_setup_files', 'config:check:check_apikeys_download_from_s3'
+        after 'config:check:upload_setup_files', 'config:check:get_config_files_from_s3'
       end
     end
   end
