@@ -18,10 +18,12 @@ namespace :config do
           s3_url = "s3://#{bucket_name}/#{config_file}"
           local_destination = "/data/config/#{File.basename(config_file)}"
           
-          info "Downloading: #{s3_url} -> #{local_destination}"
+          info Airbrussh::Colors.green("Downloading: #{s3_url} -> #{local_destination}")
           
           begin
-            execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{local_destination}", as: fetch(:app_user)
+            as fetch(:app_user) do
+              execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{local_destination}"
+            end
             info Airbrussh::Colors.green("✓ Successfully downloaded #{config_file}")
           rescue => e
             if required
