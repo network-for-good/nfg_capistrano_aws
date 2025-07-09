@@ -7,11 +7,6 @@ namespace :config do
     run_locally do
       s3_config = fetch(:s3_config_files, {})
       
-      info Airbrussh::Colors.blue("\n--- Downloading Config Files from S3 to Local ---")
-      
-      # Ensure local temp directory exists
-      execute :mkdir, '-p', '/data/config'
-      
       s3_config.each do |bucket_key, files|
         bucket_name = (value = fetch(bucket_key)).respond_to?(:call) ? value.call : value
         
@@ -46,8 +41,6 @@ namespace :config do
           end
         end
       end
-      
-      info Airbrussh::Colors.blue("--- Local S3 Download Complete ---\n")
     end
     
     # Reset linked_files to ensure only explicitly downloaded files are included
@@ -59,10 +52,8 @@ namespace :config do
     # Display the dynamically built linked_files array
     linked_files = fetch(:linked_files, [])
     if linked_files.any?
-      info Airbrussh::Colors.cyan("\n--- Linked Files Configuration ---")
-      info Airbrussh::Colors.cyan("The following files will be linked during deployment:")
-      linked_files.each { |file| info Airbrussh::Colors.cyan("  - #{file}") }
-      info Airbrussh::Colors.cyan("--- End Linked Files Configuration ---\n")
+      info Airbrussh::Colors.blue("The following files will be linked during deployment:")
+      linked_files.each { |file| info Airbrussh::Colors.blue("  - #{file}") }
     else
       warn Airbrussh::Colors.yellow("No files were successfully downloaded for linking")
     end
@@ -70,11 +61,6 @@ namespace :config do
     # Now upload the downloaded files to remote servers
     on roles(:all) do
       s3_config = fetch(:s3_config_files, {})
-      
-      info Airbrussh::Colors.blue("\n--- Uploading Config Files to Remote Servers ---")
-      
-      # Ensure remote config directory exists
-      execute :mkdir, '-p', "#{shared_path}/config"
       
       s3_config.each do |bucket_key, files|
         files.each do |file_config|
@@ -94,8 +80,6 @@ namespace :config do
           end
         end
       end
-      
-      info Airbrussh::Colors.blue("--- Upload to Remote Servers Complete ---\n")
     end
 
   end
