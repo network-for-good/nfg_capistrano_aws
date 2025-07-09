@@ -43,23 +43,25 @@ namespace :config do
       end
     end
     
-    # Reset linked_files to ensure only explicitly downloaded files are included
-    # This prevents any legacy configurations from interfering
-    downloaded_files = fetch(:linked_files, []).dup
-    set :linked_files, []
-    set :linked_files, downloaded_files
-    
-    # Display the dynamically built linked_files array
-    linked_files = fetch(:linked_files, [])
-    if linked_files.any?
-      info Airbrussh::Colors.blue("The following files will be linked during deployment:")
-      linked_files.each { |file| info Airbrussh::Colors.blue("  - #{file}") }
-    else
-      warn Airbrussh::Colors.yellow("No files were successfully downloaded for linking")
-    end
-    
-    # Now upload the downloaded files to remote servers
-    on roles(:all) do
+    # Reset, display, and upload in a single run_locally block
+    run_locally do
+      # Reset linked_files to ensure only explicitly downloaded files are included
+      # This prevents any legacy configurations from interfering
+      downloaded_files = fetch(:linked_files, []).dup
+      set :linked_files, []
+      set :linked_files, downloaded_files
+      
+      # Display the dynamically built linked_files array
+      linked_files = fetch(:linked_files, [])
+      if linked_files.any?
+        info Airbrussh::Colors.blue("The following files will be linked during deployment:")
+        linked_files.each { |file| info Airbrussh::Colors.blue("  - #{file}") }
+      else
+        error Airbrussh::Colors.red("ERROR! - No files were successfully downloaded for linking")
+        exit 1
+      end
+      
+      # Now upload the downloaded files to remote servers
       s3_config = fetch(:s3_config_files, {})
       
       s3_config.each do |bucket_key, files|
@@ -67,13 +69,15 @@ namespace :config do
           config_file = file_config[:file].respond_to?(:call) ? file_config[:file].call : file_config[:file]
           required = file_config[:required]
           local_file = "/data/config/#{File.basename(config_file)}"
-          remote_destination = "#{shared_path}/config/#{File.basename(config_file)}"
           
-          # Check if file was downloaded locally
+          # Check if file was downloaded locally and upload to remote servers
           if File.exist?(local_file)
-            info Airbrussh::Colors.green("Uploading: #{local_file} -> #{remote_destination}")
-            upload! local_file, remote_destination
-            info Airbrussh::Colors.green("✓ Successfully uploaded #{File.basename(config_file)}")
+            on roles(:all) do
+              remote_destination = "#{shared_path}/config/#{File.basename(config_file)}"
+              info Airbrussh::Colors.green("Uploading: #{local_file} -> #{remote_destination}")
+              upload! local_file, remote_destination
+              info Airbrussh::Colors.green("✓ Successfully uploaded #{File.basename(config_file)}")
+            end
           elsif required
             warn Airbrussh::Colors.red("ERROR! - Required file #{File.basename(config_file)} was not downloaded")
             exit 1
