@@ -19,8 +19,13 @@ namespace :config do
           info Airbrussh::Colors.green("Downloading: #{s3_url} -> #{local_destination}")
           
           begin
-            as fetch(:app_user) do
+            # In CI/CD environments, execute directly without switching users
+            if ENV['CI'] == 'true'
               execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{local_destination}"
+            else
+              as fetch(:app_user) do
+                execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{local_destination}"
+              end
             end
             info Airbrussh::Colors.green("✓ Successfully downloaded #{config_file}")
             

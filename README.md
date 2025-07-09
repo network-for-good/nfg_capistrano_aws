@@ -38,6 +38,22 @@ These tasks work together to ensure that:
 - Files are uploaded to all target servers before the deployment process tries to link them
 - The deployment fails fast if any required configuration files are missing
 
+## Environment Variables
+
+The following environment variables can be used to customize deployment behavior:
+
+### `DEBUG_S3_PATHS`
+- **Purpose**: Enables verbose debugging output for S3 configuration files
+- **When to use**: When troubleshooting S3 configuration issues or verifying file paths
+- **Output**: Shows application name, config path, and detailed S3 URLs for all configured files
+- **Example**: `DEBUG_S3_PATHS=1 bundle exec cap production deploy`
+
+### `CI`
+- **Purpose**: Indicates deployment is running in a CI/CD environment
+- **Effect**: Skips user switching (`as fetch(:app_user)`) during S3 file downloads
+- **Value**: Set to `'true'` in CI/CD environments
+- **Example**: `CI=true bundle exec cap production deploy`
+
 ## Installation
 
 Add this line to your application's Gemfile:

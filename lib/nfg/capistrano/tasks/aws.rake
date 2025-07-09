@@ -139,30 +139,32 @@ namespace :aws do
         end
         puts "\nMIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
 
-        # Debug S3 Config Files
-        puts "\n--- S3 Config Files Debug ---"
-        begin
-          puts "Application: #{fetch(:application)}"
-          app_config_path = fetch(:app_config_path)
-          app_config_path = app_config_path.respond_to?(:call) ? app_config_path.call : app_config_path
-          puts "App Config Path: #{app_config_path}"
-          
-          s3_config = fetch(:s3_config_files, {})
-          s3_config.each do |bucket_key, files|
-            bucket_name = fetch(bucket_key)
-            bucket_name = bucket_name.respond_to?(:call) ? bucket_name.call : bucket_name
-            puts "#{bucket_key} (#{bucket_name}):"
-            files.each do |file_config|
-              config_file = file_config[:file].respond_to?(:call) ? file_config[:file].call : file_config[:file]
-              status = file_config[:required] ? "REQUIRED" : "optional"
-              s3_url = "s3://#{bucket_name}/#{config_file}"
-              puts "  - #{s3_url} (#{status})"
+        # Debug S3 Config Files (only if DEBUG_S3_PATHS is set)
+        if ENV['DEBUG_S3_PATHS']
+          puts "\n--- S3 Config Files Debug ---"
+          begin
+            puts "Application: #{fetch(:application)}"
+            app_config_path = fetch(:app_config_path)
+            app_config_path = app_config_path.respond_to?(:call) ? app_config_path.call : app_config_path
+            puts "App Config Path: #{app_config_path}"
+            
+            s3_config = fetch(:s3_config_files, {})
+            s3_config.each do |bucket_key, files|
+              bucket_name = fetch(bucket_key)
+              bucket_name = bucket_name.respond_to?(:call) ? bucket_name.call : bucket_name
+              puts "#{bucket_key} (#{bucket_name}):"
+              files.each do |file_config|
+                config_file = file_config[:file].respond_to?(:call) ? file_config[:file].call : file_config[:file]
+                status = file_config[:required] ? "REQUIRED" : "optional"
+                s3_url = "s3://#{bucket_name}/#{config_file}"
+                puts "  - #{s3_url} (#{status})"
+              end
             end
+          rescue => e
+            puts "Error displaying S3 config: #{e.message}"
           end
-        rescue => e
-          puts "Error displaying S3 config: #{e.message}"
+          puts "--- End S3 Config Debug ---\n"
         end
-        puts "--- End S3 Config Debug ---\n"
 
         before 'deploy:migrate', 'migrations:check'
         before 'deploy:starting', 'config:download_config_files_from_s3'
