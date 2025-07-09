@@ -1,5 +1,5 @@
 namespace :config do
-  desc 'Download all configuration files from S3 locally and upload to servers'
+  desc 'Download all configuration files from S3 locally and set linked_files array'
   task :download_config_files_from_s3 do
     # Initialize empty linked_files array to be populated with successfully downloaded files
     set :linked_files, []
@@ -43,7 +43,7 @@ namespace :config do
       end
     end
     
-    # Reset, display, and upload in a single run_locally block
+    # Reset, display linked_files array
     run_locally do
       # Reset linked_files to ensure only explicitly downloaded files are included
       # This prevents any legacy configurations from interfering
@@ -60,8 +60,12 @@ namespace :config do
         error Airbrussh::Colors.red("ERROR! - No files were successfully downloaded for linking")
         exit 1
       end
-      
-      # Now upload the downloaded files to remote servers
+    end
+  end
+
+  desc 'Upload config files from local to remote servers'
+  task :upload_config_files_to_remote do
+    run_locally do
       s3_config = fetch(:s3_config_files, {})
       
       s3_config.each do |bucket_key, files|
@@ -85,6 +89,5 @@ namespace :config do
         end
       end
     end
-
   end
 end
