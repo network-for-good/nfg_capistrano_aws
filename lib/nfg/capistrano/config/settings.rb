@@ -11,7 +11,9 @@ set :setup_files, fetch(:setup_files, []).push('/data/config/database.yml', '/da
 set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/redis.yml', 'config/redis-jobs.yml', 'config/api-keys.yml')
 
 # Default value for linked_dirs is []
-set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'public/system', 'public/packs')
+# Note: public/assets and public/packs are intentionally NOT shared to prevent 
+# asset version conflicts during deployment and ensure each release is self-contained
+set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'public/system')
 
 # Restart from current
 set :passenger_restart_with_touch, true
