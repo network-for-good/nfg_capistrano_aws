@@ -48,9 +48,7 @@ namespace :aws do
     desc "Set the App Instance to localhost"
     task :set_app_instances_to_local do
       server 'localhost', user: fetch(:app_user), roles: ENV['CAP_ROLES'].split(','), primary: true
-      before 'deploy:check:linked_files', 'config:check:upload_setup_files'
-      before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
-      after 'config:check:upload_setup_files', 'config:check:get_config_files_from_s3'
+      before 'deploy:check:linked_files', 'config:download_config_files_from_s3'
     end
 
     desc 'Use fetch_running_instances to set the App Instances'
@@ -98,7 +96,7 @@ namespace :aws do
           end
         end
       elsif configured_servers.any?
-        before 'deploy:symlink:linked_files', 'config:check:get_config_files_from_s3'
+        before 'deploy:symlink:linked_files', 'config:download_config_files_from_s3'
         before 'deploy:migrate', 'migrations:check'
         if configured_servers.first.hostname == 'localhost'
         end
@@ -167,9 +165,7 @@ namespace :aws do
         before 'deploy:migrate', 'migrations:check'
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
-        before 'deploy:check:linked_files', 'config:check:upload_setup_files'
-        before 'config:check:upload_setup_files', 'config:check:setup_files_exists_local'
-        after 'config:check:upload_setup_files', 'config:check:get_config_files_from_s3'
+        before 'deploy:check:linked_files', 'config:download_config_files_from_s3'
       end
     end
   end

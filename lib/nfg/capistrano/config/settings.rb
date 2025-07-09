@@ -5,13 +5,29 @@ end)
 
 # Default value for :setup_files is []
 # This setup files expected to be present from where we run cap deploy
-set :setup_files, fetch(:setup_files, []).push('/data/config/database.yml', '/data/config/redis.yml', '/data/config/redis-jobs.yml')
+set :setup_files, fetch(:setup_files, []).push('/data/config/database.yml', 
+                                               '/data/config/redis.yml', 
+                                               '/data/config/redis-jobs.yml', 
+                                               '/data/config/cable.yml',
+                                               '/data/config/api-keys.yml',
+                                               '/data/config/master.key')
 
 # Default value for :linked_files is []
-set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/redis.yml', 'config/redis-jobs.yml', 'config/api-keys.yml')
+set :linked_files, fetch(:linked_files, []).push('config/database.yml', 
+                                                 'config/redis.yml', 
+                                                 'config/redis-jobs.yml', 
+                                                 'config/cable.yml',
+                                                 'config/api-keys.yml',
+                                                 'config/master.key')
 
 # Default value for linked_dirs is []
-set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'public/system', 'public/packs')
+set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 
+                                               'log', 
+                                               'tmp/pids', 
+                                               'tmp/cache', 
+                                               'tmp/sockets', 
+                                               'public/system', 
+                                               'public/packs')
 
 # Restart from current
 set :passenger_restart_with_touch, true
