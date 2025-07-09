@@ -46,7 +46,11 @@ The following environment variables can be used to customize deployment behavior
 - **Purpose**: Enables verbose debugging output for S3 configuration files
 - **When to use**: When troubleshooting S3 configuration issues or verifying file paths
 - **Output**: Shows application name, config path, and detailed S3 URLs for all configured files
-- **Example**: `DEBUG_S3_PATHS=1 bundle exec cap production deploy`
+- **Accepted values**: `true`, `1`, `y`, `yes` (case-insensitive)
+- **Examples**: 
+  - `DEBUG_S3_PATHS=true bundle exec cap production deploy`
+  - `DEBUG_S3_PATHS=1 bundle exec cap production deploy`
+  - `DEBUG_S3_PATHS=y bundle exec cap production deploy`
 
 ### `CI`
 - **Purpose**: Indicates deployment is running in a CI/CD environment

@@ -140,7 +140,8 @@ namespace :aws do
         puts "\nMIGRATE: #{ENV.fetch('MIGRATE', 'n')}"
 
         # Debug S3 Config Files (only if DEBUG_S3_PATHS is set)
-        if ENV['DEBUG_S3_PATHS']
+        case ENV['DEBUG_S3_PATHS']&.downcase
+        when 'true', '1', 'y', 'yes'
           puts "\n--- S3 Config Files Debug ---"
           begin
             puts "Application: #{fetch(:application)}"
