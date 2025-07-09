@@ -10,13 +10,53 @@ cap aws:deploy:set_app_instances_to_local        # Set the App Instance to local
 cap aws:maintenance:off                          # Maintenance mode Off
 cap aws:maintenance:on                           # Maintenance mode on
 
-cap config:check:check_apikeys_download_from_s3  # Check if api-keys should download from S3
-cap config:check:get_api_keys_from_s3            # get_api_keys_from_s3
-cap config:check:setup_files_exists_local        # Check Setup files exists in Local
-cap config:check:upload_setup_files              # Check Setup files are exists, if not upload files
+cap config:download_config_files_from_s3         # Download all configuration files from S3 locally and set linked_files array
+cap config:upload_config_files_to_remote         # Upload config files from local to remote servers
 
 cap migrations:check                             # check if migrations should be run
 ```
+
+## Configuration File Workflow
+
+The configuration file management is handled by two tasks that run automatically during deployment:
+
+### 1. `config:download_config_files_from_s3`
+- **When**: Runs very early in the deployment process (before `deploy:starting`)
+- **What**: Downloads configuration files from S3 to the local deployment machine at `/data/config/`
+- **Purpose**: Sets up the `:linked_files` array dynamically based on successfully downloaded files
+- **Error handling**: Fails the deployment if required files cannot be downloaded
+
+### 2. `config:upload_config_files_to_remote`
+- **When**: Runs before `deploy:check:linked_files` 
+- **What**: Uploads the downloaded configuration files from local machine to remote servers
+- **Purpose**: Ensures configuration files are available on remote servers for linking
+- **Error handling**: Fails the deployment if required files are missing locally
+
+These tasks work together to ensure that:
+- Configuration files are downloaded from S3 once (locally)
+- Only successfully downloaded files are included in the linked_files array
+- Files are uploaded to all target servers before the deployment process tries to link them
+- The deployment fails fast if any required configuration files are missing
+
+## Environment Variables
+
+The following environment variables can be used to customize deployment behavior:
+
+### `DEBUG_S3_PATHS`
+- **Purpose**: Enables verbose debugging output for S3 configuration files
+- **When to use**: When troubleshooting S3 configuration issues or verifying file paths
+- **Output**: Shows application name, config path, and detailed S3 URLs for all configured files
+- **Accepted values**: `true`, `1`, `y`, `yes` (case-insensitive)
+- **Examples**: 
+  - `DEBUG_S3_PATHS=true bundle exec cap production deploy`
+  - `DEBUG_S3_PATHS=1 bundle exec cap production deploy`
+  - `DEBUG_S3_PATHS=y bundle exec cap production deploy`
+
+### `CI`
+- **Purpose**: Indicates deployment is running in a CI/CD environment
+- **Effect**: Skips user switching (`as fetch(:app_user)`) during S3 file downloads
+- **Value**: Set to `'true'` in CI/CD environments
+- **Example**: `CI=true bundle exec cap production deploy`
 
 ## Installation
 
