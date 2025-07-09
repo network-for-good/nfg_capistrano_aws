@@ -14,6 +14,10 @@ namespace :config do
           begin
             execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_key} --key #{config_file} #{destination}", as: fetch(:app_user)
             info Airbrussh::Colors.green("✓ Successfully downloaded #{config_file}")
+            on roles(:all) do
+              info Airbrussh::Colors.green("Uploading: #{file} -> #{shared_path}/config/#{File.basename(file)}")
+              upload! file, "#{shared_path}/config/#{File.basename(file)}"
+            end
           rescue => e
             if required
               warn Airbrussh::Colors.red("ERROR! - Failed to download required file: #{s3_url}")
@@ -23,20 +27,6 @@ namespace :config do
               warn Airbrussh::Colors.yellow("Error: #{e.message}")
             end
           end
-        end
-      end
-    end
-  end
-
-  desc 'Upload config files to shared directory on ec2 instances'
-  task :upload_config_files_to_shared do
-    on roles(:all) do
-      fetch(:setup_files, []).each do |file|
-        if File.file?(file)
-          info Airbrussh::Colors.green("Uploading: #{file} -> #{shared_path}/config/#{File.basename(file)}")
-          upload! file, "#{shared_path}/config/#{File.basename(file)}"
-        else
-          warn Airbrussh::Colors.yellow("⚠ #{file} not found")
         end
       end
     end

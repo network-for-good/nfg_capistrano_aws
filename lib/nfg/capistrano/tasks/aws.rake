@@ -165,7 +165,7 @@ namespace :aws do
         before 'deploy:migrate', 'migrations:check'
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
-        before 'deploy:check:linked_files', 'config:download_config_files_from_s3'
+        after 'aws:deploy:set_app_instances_to_live', 'config:download_config_files_from_s3'
       end
     end
   end
