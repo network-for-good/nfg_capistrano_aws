@@ -19,14 +19,7 @@ namespace :config do
           info Airbrussh::Colors.green("Downloading: #{s3_url} -> #{remote_destination}")
           
           begin
-            # In CI/CD environments, execute directly without switching users
-            if ENV['CI'] == 'true'
-              execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{remote_destination}"
-            else
-              as fetch(:app_user) do
-                execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{remote_destination}"
-              end
-            end
+            execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{remote_destination} --no-cli-pager"
             info Airbrussh::Colors.green("✓ Successfully downloaded #{config_file}")
             
             # Add successfully downloaded file to linked_files array
@@ -58,8 +51,8 @@ namespace :config do
     on roles(:all) do
       linked_files = fetch(:linked_files, [])
       if linked_files.any?
-        info Airbrussh::Colors.blue("The following files will be linked during deployment:")
-        linked_files.each { |file| info Airbrussh::Colors.blue("  - #{file}") }
+        info Airbrussh::Colors.green("The following files will be linked during deployment:")
+        linked_files.each { |file| info Airbrussh::Colors.green("  - #{file}") }
       else
         error Airbrussh::Colors.red("ERROR! - No files were successfully downloaded for linking")
         exit 1
