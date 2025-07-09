@@ -1,10 +1,13 @@
 namespace :config do
   desc 'Download all configuration files from S3 locally and upload to servers'
   task :download_config_files_from_s3 do
+    # Initialize empty linked_files array to be populated with successfully downloaded files
+    set :linked_files, []
+    
     run_locally do
       s3_config = fetch(:s3_config_files, {})
       
-      info "\n--- Downloading Config Files from S3 to Local ---"
+      info Airbrussh::Colors.blue("\n--- Downloading Config Files from S3 to Local ---")
       
       # Ensure local temp directory exists
       execute :mkdir, '-p', '/data/config'
@@ -25,6 +28,12 @@ namespace :config do
               execute :aws, "s3api get-object --profile s3-role --bucket #{bucket_name} --key #{config_file} #{local_destination}"
             end
             info Airbrussh::Colors.green("✓ Successfully downloaded #{config_file}")
+            
+            # Add successfully downloaded file to linked_files array
+            linked_file_path = "config/#{File.basename(config_file)}"
+            current_linked_files = fetch(:linked_files, [])
+            current_linked_files.push(linked_file_path) unless current_linked_files.include?(linked_file_path)
+            set :linked_files, current_linked_files
           rescue => e
             if required
               warn Airbrussh::Colors.red("ERROR! - Failed to download required file: #{s3_url}")
@@ -38,14 +47,31 @@ namespace :config do
         end
       end
       
-      info "--- Local S3 Download Complete ---\n"
+      info Airbrussh::Colors.blue("--- Local S3 Download Complete ---\n")
+    end
+    
+    # Reset linked_files to ensure only explicitly downloaded files are included
+    # This prevents any legacy configurations from interfering
+    downloaded_files = fetch(:linked_files, []).dup
+    set :linked_files, []
+    set :linked_files, downloaded_files
+    
+    # Display the dynamically built linked_files array
+    linked_files = fetch(:linked_files, [])
+    if linked_files.any?
+      info Airbrussh::Colors.cyan("\n--- Linked Files Configuration ---")
+      info Airbrussh::Colors.cyan("The following files will be linked during deployment:")
+      linked_files.each { |file| info Airbrussh::Colors.cyan("  - #{file}") }
+      info Airbrussh::Colors.cyan("--- End Linked Files Configuration ---\n")
+    else
+      warn Airbrussh::Colors.yellow("No files were successfully downloaded for linking")
     end
     
     # Now upload the downloaded files to remote servers
     on roles(:all) do
       s3_config = fetch(:s3_config_files, {})
       
-      info "\n--- Uploading Config Files to Remote Servers ---"
+      info Airbrussh::Colors.blue("\n--- Uploading Config Files to Remote Servers ---")
       
       # Ensure remote config directory exists
       execute :mkdir, '-p', "#{shared_path}/config"
@@ -59,7 +85,7 @@ namespace :config do
           
           # Check if file was downloaded locally
           if File.exist?(local_file)
-            info "Uploading: #{local_file} -> #{remote_destination}"
+            info Airbrussh::Colors.green("Uploading: #{local_file} -> #{remote_destination}")
             upload! local_file, remote_destination
             info Airbrussh::Colors.green("✓ Successfully uploaded #{File.basename(config_file)}")
           elsif required
@@ -69,7 +95,7 @@ namespace :config do
         end
       end
       
-      info "--- Upload to Remote Servers Complete ---\n"
+      info Airbrussh::Colors.blue("--- Upload to Remote Servers Complete ---\n")
     end
 
   end

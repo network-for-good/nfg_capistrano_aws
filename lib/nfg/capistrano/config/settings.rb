@@ -3,22 +3,9 @@ set :branch, (ENV.fetch('BRANCH') do |branch|
   ask("latest tag: #{`git describe --abbrev=0 --tags`.chomp}.\nDefault:", `git rev-parse --abbrev-ref HEAD`.chomp)
 end)
 
-# Default value for :setup_files is []
-# This setup files expected to be present from where we run cap deploy
-set :setup_files, fetch(:setup_files, []).push('/data/config/database.yml', 
-                                               '/data/config/redis.yml', 
-                                               '/data/config/redis-jobs.yml', 
-                                               '/data/config/cable.yml',
-                                               '/data/config/api-keys.yml',
-                                               '/data/config/master.key')
-
 # Default value for :linked_files is []
-set :linked_files, fetch(:linked_files, []).push('config/database.yml', 
-                                                 'config/redis.yml', 
-                                                 'config/redis-jobs.yml', 
-                                                 'config/cable.yml',
-                                                 'config/api-keys.yml',
-                                                 'config/master.key')
+# linked_files will be built dynamically based on successfully downloaded S3 config files
+set :linked_files, fetch(:linked_files, [])
 
 # Default value for linked_dirs is []
 set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 
