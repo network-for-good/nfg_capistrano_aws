@@ -48,8 +48,7 @@ namespace :aws do
     desc "Set the App Instance to localhost"
     task :set_app_instances_to_local do
       server 'localhost', user: fetch(:app_user), roles: ENV['CAP_ROLES'].split(','), primary: true
-      before 'deploy:starting', 'config:download_config_files_from_s3'
-      before 'deploy:check:linked_files', 'config:upload_config_files_to_remote'
+      before 'deploy:starting', 'config:download_config_files_from_s3_remote'
     end
 
     desc 'Use fetch_running_instances to set the App Instances'
@@ -97,8 +96,7 @@ namespace :aws do
           end
         end
       elsif configured_servers.any?
-        before 'deploy:starting', 'config:download_config_files_from_s3'
-        before 'deploy:check:linked_files', 'config:upload_config_files_to_remote'
+        before 'deploy:starting', 'config:download_config_files_from_s3_remote'
         before 'deploy:migrate', 'migrations:check'
         if configured_servers.first.hostname == 'localhost'
         end
@@ -168,8 +166,7 @@ namespace :aws do
         end
 
         before 'deploy:migrate', 'migrations:check'
-        before 'deploy:starting', 'config:download_config_files_from_s3'
-        before 'deploy:check:linked_files', 'config:upload_config_files_to_remote'
+        before 'deploy:starting', 'config:download_config_files_from_s3_remote'
         after 'aws:deploy:fetch_running_instances', 'aws:deploy:confirm_running_instances'
         after 'aws:deploy:confirm_running_instances', 'aws:deploy:set_app_instances_to_live'
       end

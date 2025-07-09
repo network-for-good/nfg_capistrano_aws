@@ -10,33 +10,39 @@ cap aws:deploy:set_app_instances_to_local        # Set the App Instance to local
 cap aws:maintenance:off                          # Maintenance mode Off
 cap aws:maintenance:on                           # Maintenance mode on
 
-cap config:download_config_files_from_s3         # Download all configuration files from S3 locally and set linked_files array
-cap config:upload_config_files_to_remote         # Upload config files from local to remote servers
+cap config:download_config_files_from_s3_remote  # Download configuration files from S3 to remote servers and set linked_files array
+cap config:download_config_files_from_s3_local   # Download configuration files from S3 to local /data/config directory
 
 cap migrations:check                             # check if migrations should be run
 ```
 
 ## Configuration File Workflow
 
-The configuration file management is handled by two tasks that run automatically during deployment:
+The configuration file management is handled by multiple tasks to support different deployment scenarios:
 
-### 1. `config:download_config_files_from_s3`
+### 1. `config:download_config_files_from_s3_remote` (Part of callback chain)
 - **When**: Runs very early in the deployment process (before `deploy:starting`)
-- **What**: Downloads configuration files from S3 to the local deployment machine at `/data/config/`
+- **What**: Downloads configuration files from S3 directly to remote servers at `#{shared_path}/config/`
 - **Purpose**: Sets up the `:linked_files` array dynamically based on successfully downloaded files
 - **Error handling**: Fails the deployment if required files cannot be downloaded
+- **Use case**: Primary task for CI/CD environments and direct remote deployment
 
-### 2. `config:upload_config_files_to_remote`
-- **When**: Runs before `deploy:check:linked_files` 
-- **What**: Uploads the downloaded configuration files from local machine to remote servers
-- **Purpose**: Ensures configuration files are available on remote servers for linking
-- **Error handling**: Fails the deployment if required files are missing locally
+### 2. `config:download_config_files_from_s3_local` (Manual task)
+- **When**: Run manually when needed
+- **What**: Downloads configuration files from S3 to local deployment machine at `/data/config/`
+- **Purpose**: Provides local copies of configuration files for development or troubleshooting
+- **Error handling**: Fails if required files cannot be downloaded
+- **Use case**: Local development or when you need local copies of config files for inspection
 
-These tasks work together to ensure that:
-- Configuration files are downloaded from S3 once (locally)
-- Only successfully downloaded files are included in the linked_files array
-- Files are uploaded to all target servers before the deployment process tries to link them
+### Deployment Flow:
+- **Standard/CI deployment**: Only `config:download_config_files_from_s3_remote` runs automatically
+- **Local development**: Run `config:download_config_files_from_s3_local` manually when you need local copies
+
+This structure ensures:
+- CI/CD environments get streamlined direct remote downloads
+- Development environments can work with local copies when needed for debugging
 - The deployment fails fast if any required configuration files are missing
+- Only successfully downloaded files are included in the linked_files array
 
 ## Environment Variables
 
