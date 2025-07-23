@@ -8,6 +8,8 @@ end)
 set :linked_files, fetch(:linked_files, [])
 
 # Default value for linked_dirs is []
+# Note: public/assets and public/packs are intentionally NOT shared to prevent 
+# asset version conflicts during deployment and ensure each release is self-contained
 set :linked_dirs, fetch(:linked_dirs, []).push('node_modules', 
                                                'log', 
                                                'tmp/pids', 

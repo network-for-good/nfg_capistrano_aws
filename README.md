@@ -14,6 +14,8 @@ cap config:download_config_files_from_s3_remote  # Download configuration files 
 cap config:download_config_files_from_s3_local   # Download configuration files from S3 to local /data/config directory
 
 cap migrations:check                             # check if migrations should be run
+
+cap deploy:compile_assets                        # Download or compile assets
 ```
 
 ## Configuration File Workflow
@@ -63,6 +65,32 @@ The following environment variables can be used to customize deployment behavior
 - **Effect**: Skips user switching (`as fetch(:app_user)`) during S3 file downloads
 - **Value**: Set to `'true'` in CI/CD environments
 - **Example**: `CI=true bundle exec cap production deploy`
+
+## Asset Management
+
+This gem provides a comprehensive approach to prevent asset version conflicts during deployments, particularly useful for beta/staging environments where multiple asset versions might exist.
+
+### Self-Contained Release Architecture
+
+Unlike traditional setups that share assets across releases, this gem configures each release to have its own complete set of assets. This provides several critical benefits:
+
+- **Zero-downtime deployments** - Old releases continue serving their assets during deployment
+- **Safe rollbacks** - Each release has its complete asset set available
+- **No race conditions** - Multiple servers can deploy simultaneously without conflicts  
+- **Atomic deployments** - Each release is completely self-contained
+
+### Asset Compilation
+
+Since each release has its own fresh asset directory, assets are compiled cleanly for each deployment without any conflicts. The gem handles asset compilation through:
+
+#### 1. S3 Asset Cache (Primary Method)
+The gem first attempts to download pre-compiled assets from S3 cache, significantly speeding up deployments.
+
+#### 2. Fallback Compilation
+If cached assets aren't available, the gem falls back to compiling assets directly on the server.
+
+#### 3. Release Management
+Each release maintains its own complete asset set, and old releases are managed through Capistrano's standard `keep_releases` setting rather than asset-specific cleanup.
 
 ## Installation
 
