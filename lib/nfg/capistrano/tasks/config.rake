@@ -19,7 +19,7 @@ namespace :config do
           info Airbrussh::Colors.green("Downloading: #{s3_url} -> #{remote_destination}")
           
           begin
-            execute :aws, "s3 cp --profile s3-role s3://#{bucket_name}/#{config_file} #{remote_destination} --no-cli-pager"
+            execute :aws, "s3 cp --profile s3-role s3://#{bucket_name}/#{config_file} #{remote_destination} --no-progress --no-cli-pager"
             info Airbrussh::Colors.green("✓ Successfully downloaded #{config_file}")
             
             # Add successfully downloaded file to linked_files array
