@@ -25,7 +25,7 @@ namespace :deploy do
     if s3_assets_file.exists?
       FileUtils.mkdir_p "#{shared_path}/public/assets"
       on release_roles :all do
-        execute :aws, "s3 cp --profile s3-role s3://#{s3_bucket}/assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename} --no-cli-pager"
+        execute :aws, "s3 cp --profile s3-role #{s3_bucket}/assets/#{assets_filename} #{shared_path}/public/assets/#{assets_filename} --no-cli-pager"
         info Airbrussh::Colors.green("Downloaded #{assets_filename} from #{s3_bucket}/assets")
         execute "tar zxf #{shared_path}/public/assets/#{assets_filename} -C #{release_path}"
         info Airbrussh::Colors.green("Extracted #{assets_filename} from #{s3_bucket}/assets")
